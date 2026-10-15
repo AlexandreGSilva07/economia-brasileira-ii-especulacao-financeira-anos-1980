@@ -1,0 +1,76 @@
+name: Publicar apresentação — Economia Brasileira II
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publicar-apresentacao.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: paginas-economia-brasileira-ii
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Obter arquivos do repositório
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Baixar os três arquivos finais verificados
+        shell: bash
+        env:
+          URL_BASE: https://money-devices-inquiry-hydrocodone.trycloudflare.com/visualizar/YaeIoTL-OebWSbkc1h_frYb74gJmO6Xje9umgTbCxlrXZbkA
+        run: |
+          set -euo pipefail
+          BASE=Apresentacao_Economia_Brasileira_II_Especulacao_Financeira_nos_Anos_1980
+          curl --fail --location --show-error --retry 4 --retry-delay 3 "$URL_BASE/$BASE.html" -o index.html
+          curl --fail --location --show-error --retry 4 --retry-delay 3 "$URL_BASE/$BASE.pptx" -o "$BASE.pptx"
+          curl --fail --location --show-error --retry 4 --retry-delay 3 "$URL_BASE/$BASE.pdf" -o "$BASE.pdf"
+          printf '%s  %s\n' \
+            '24699956dc6910d8dd59d5993ce835f001228e5b31bcbf4a3a03e71177f9211e' index.html \
+            '84fb9119c72de7f32e70ba62822b302ada33e9b93b951cfccb91a4a700e409dc' "$BASE.pptx" \
+            '5388a693c509449cabd66ed76fdb87ce1ffdbdee212b7a270fedfcd3e39a576c' "$BASE.pdf" | sha256sum --check
+          touch .nojekyll
+
+      - name: Guardar cópia permanente no repositório
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html '*.pptx' '*.pdf' .nojekyll
+          if ! git diff --cached --quiet; then
+            git commit -m "Publica arquivos finais do seminário, sem alterações"
+            git push origin HEAD:main
+          fi
+
+      - name: Habilitar GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Preparar site estático
+        run: |
+          mkdir -p site
+          cp index.html *.pptx *.pdf .nojekyll site/
+
+      - name: Enviar site para GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Publicar GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
