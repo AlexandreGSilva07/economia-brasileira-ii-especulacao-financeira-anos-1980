@@ -1,0 +1,95 @@
+name: Publicar preview para WhatsApp
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/preview-whatsapp.yml"
+      - "og-preview-especulacao-financeira-anos-1980.jpg"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: paginas-economia-brasileira-ii
+  cancel-in-progress: false
+
+jobs:
+  publicar-preview:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Obter arquivos da apresentação
+        uses: actions/checkout@v4
+
+      - name: Atualizar somente as metatags do HTML
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path("index.html")
+          content = p.read_text(encoding="utf-8")
+          site = "https://alexandregsilva07.github.io/economia-brasileira-ii-especulacao-financeira-anos-1980/"
+          image = site + "og-preview-especulacao-financeira-anos-1980.jpg"
+          content = re.sub(r"<title>[^<]*</title>", "<title>A especulação financeira nos anos 1980 — Economia Brasileira II</title>", content, count=1)
+          if 'property="og:image"' not in content:
+              metas = f"""
+          <meta name="description" content="Seminário acadêmico de Economia Brasileira II — UFMT. A especulação financeira no Brasil dos anos 1980.">
+          <link rel="canonical" href="{site}">
+          <meta property="og:type" content="website">
+          <meta property="og:locale" content="pt_BR">
+          <meta property="og:site_name" content="Economia Brasileira II — UFMT">
+          <meta property="og:url" content="{site}">
+          <meta property="og:title" content="A especulação financeira nos anos 1980">
+          <meta property="og:description" content="Seminário acadêmico de Economia Brasileira II — UFMT.">
+          <meta property="og:image" content="{image}">
+          <meta property="og:image:secure_url" content="{image}">
+          <meta property="og:image:type" content="image/jpeg">
+          <meta property="og:image:width" content="1200">
+          <meta property="og:image:height" content="630">
+          <meta property="og:image:alt" content="Capa do seminário A especulação financeira nos anos 1980, com estética brasileira dos anos 1980.">
+          <meta name="twitter:card" content="summary_large_image">
+          <meta name="twitter:title" content="A especulação financeira nos anos 1980">
+          <meta name="twitter:description" content="Seminário acadêmico — Economia Brasileira II • UFMT">
+          <meta name="twitter:image" content="{image}">
+          """
+              content = content.replace("<style>", metas + "\n<style>", 1)
+          assert content.count('property="og:image"') == 1
+          assert content.endswith("</script></body></html>")
+          p.write_text(content, encoding="utf-8")
+          PY
+
+      - name: Guardar os metadados no repositório
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Configura capa de compartilhamento para WhatsApp"
+            git push origin HEAD:main
+          fi
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Preparar arquivos públicos
+        shell: bash
+        run: |
+          mkdir -p site
+          cp index.html *.pptx *.pdf .nojekyll og-preview-especulacao-financeira-anos-1980.jpg site/
+
+      - name: Criar artefato do site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Publicar GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
