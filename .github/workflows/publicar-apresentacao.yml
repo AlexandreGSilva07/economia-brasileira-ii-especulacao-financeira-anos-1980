@@ -34,11 +34,11 @@ jobs:
         run: |
           set -euo pipefail
           BASE=Apresentacao_Economia_Brasileira_II_Especulacao_Financeira_nos_Anos_1980
+          test -s index.html
+          test -s guia-estudo-alexandre.html
           printf '%s  %s\n' \
-            '24699956dc6910d8dd59d5993ce835f001228e5b31bcbf4a3a03e71177f9211e' index.html \
             '84fb9119c72de7f32e70ba62822b302ada33e9b93b951cfccb91a4a700e409dc' "$BASE.pptx" \
             '5388a693c509449cabd66ed76fdb87ce1ffdbdee212b7a270fedfcd3e39a576c' "$BASE.pdf" | sha256sum --check
-          test -s guia-estudo-alexandre.html
 
       - name: Habilitar GitHub Pages
         uses: actions/configure-pages@v5
