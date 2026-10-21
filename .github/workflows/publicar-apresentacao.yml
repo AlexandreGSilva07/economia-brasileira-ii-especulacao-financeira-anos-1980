@@ -1,60 +1,22 @@
-name: Publicar apresentação — Economia Brasileira II
-
+name: Verificar apresentação e guia de estudo
 on:
   push:
     branches: [main]
-    paths:
-      - ".github/workflows/publicar-apresentacao.yml"
-      - "guia-estudo-alexandre.html"
   workflow_dispatch:
-
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: paginas-economia-brasileira-ii
-  cancel-in-progress: false
-
 jobs:
-  publicar:
+  validar:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - name: Obter arquivos do repositório
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-
-      - name: Verificar arquivos existentes e preservar conteúdo da apresentação
+      - uses: actions/checkout@v4
+      - name: Verificar arquivos publicados
         shell: bash
         run: |
           set -euo pipefail
-          BASE=Apresentacao_Economia_Brasileira_II_Especulacao_Financeira_nos_Anos_1980
           test -s index.html
           test -s guia-estudo-alexandre.html
+          BASE=Apresentacao_Economia_Brasileira_II_Especulacao_Financeira_nos_Anos_1980
           printf '%s  %s\n' \
             '84fb9119c72de7f32e70ba62822b302ada33e9b93b951cfccb91a4a700e409dc' "$BASE.pptx" \
             '5388a693c509449cabd66ed76fdb87ce1ffdbdee212b7a270fedfcd3e39a576c' "$BASE.pdf" | sha256sum --check
-
-      - name: Habilitar GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - name: Preparar site estático
-        run: |
-          mkdir -p site
-          cp index.html *.pptx *.pdf guia-estudo-alexandre.html .nojekyll site/
-
-      - name: Enviar site para GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-
-      - name: Publicar GitHub Pages
-        id: deploy
-        uses: actions/deploy-pages@v4
