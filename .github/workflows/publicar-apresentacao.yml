@@ -18,5 +18,5 @@ jobs:
           test -s guia-estudo-alexandre.html
           BASE=Apresentacao_Economia_Brasileira_II_Especulacao_Financeira_nos_Anos_1980
           printf '%s  %s\n' \
-            '84fb9119c72de7f32e70ba62822b302ada33e9b93b951cfccb91a4a700e409dc' "$BASE.pptx" \
-            '5388a693c509449cabd66ed76fdb87ce1ffdbdee212b7a270fedfcd3e39a576c' "$BASE.pdf" | sha256sum --check
+            '0e6330f3c636164f16fc28dbabf94d74a52fc7f2e1db1f8d644af9c955ecab22' "$BASE.pptx" \
+            '47ad572fa7dfc8852c5ee99e96885751f9f2772a32732673d906201a33d9e2d2' "$BASE.pdf" | sha256sum --check
